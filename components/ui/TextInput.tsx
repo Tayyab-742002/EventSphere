@@ -117,7 +117,13 @@ const TextInput: React.FC<TextInputProps> = ({
         />
       </ThemedView>
       {error && (
-        <ThemedText className="text-[#ef4444] mt-4">{error}</ThemedText>
+        <ThemedText
+          lightColor="#f87171"
+          darkColor="#f87171"
+          className="!text-red-400 mt-4"
+        >
+          {error}
+        </ThemedText>
       )}
     </ThemedView>
   );

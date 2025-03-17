@@ -37,9 +37,12 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Comic.ttf"]
+          "fonts": [
+            "./assets/fonts/Comic.ttf"
+          ]
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

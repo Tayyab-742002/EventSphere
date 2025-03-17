@@ -2,7 +2,11 @@ import { ThemedText } from "@/components/ThemedText";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthForm from "@/components/Auth/AuthForm";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "expo-router";
+import { AuthScreenWrapper } from "@/components/Layouts/AuthScreenWrapper";
+import { useAuth } from "@/Provider/authContext";
+
 type SignInFormTypes = {
   email: string;
   password: string;
@@ -10,25 +14,22 @@ type SignInFormTypes = {
 export default () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const handleSubmit = ({
-    email,
-    password,
-  }: SignInFormTypes) => {
-    console.log("Email : ", email);
-    console.log("Password : ", password);
-  };
+
+  const handleSubmit = async ({ email, password }: SignInFormTypes) => {};
   return (
-    <SafeAreaView className="flex-1">
-      <View className="flex h-full">
-        {/* <TextInput placeholder="Enter Your mail" label="Email" />
-        <Button>Press me</Button> */}
-        <AuthForm
-          type="signin"
-          onSubmit={handleSubmit}
-          error={"test"}
-          isLoading={isLoading}
-        />
-      </View>
-    </SafeAreaView>
+    <AuthScreenWrapper title="Sign In" subtitle="Welcom Back !">
+      <AuthForm
+        type="signin"
+        onSubmit={handleSubmit}
+        error={error || ""}
+        isLoading={isLoading}
+      />
+      <Link href={"/(auth)/signup"} className="mt-7 font-comic">
+        <ThemedText className="text-center">
+          Don't have an account? &nbsp;
+        </ThemedText>
+        <ThemedText type="link">Sign Up</ThemedText>
+      </Link>
+    </AuthScreenWrapper>
   );
 };
