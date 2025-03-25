@@ -12,9 +12,11 @@ type AuthCredentialsType = {
   password: string;
   confirmPassword?: string;
 };
+type AuthFormType = "signin" | "signup" | "reset" | "otp" | "updatePassword";
+
 interface AuthFormProps {
-  type: "signin" | "signup";
-  onSubmit: (credentials: AuthCredentialsType) => void;
+  type: AuthFormType;
+  onSubmit: (credentials: any) => void;
   isLoading?: boolean;
   error: string;
 }
@@ -29,30 +31,295 @@ const AuthForm: React.FC<AuthFormProps> = ({
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<AuthCredentialsType>({
-    mode: "onChange", // Change to onChange for better validation feedback
+  } = useForm({
+    mode: "onChange",
   });
 
-  // Watch all form fields
-  const formValues = watch();
+  const renderFields = () => {
+    switch (type) {
+      case "reset":
+        return (
+          <Controller
+            control={control}
+            rules={{
+              required: "Email is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Invalid email address",
+              },
+            }}
+            render={({ field, fieldState }) => (
+              <TextInput
+                value={field.value}
+                onChangeText={field.onChange}
+                placeholder="email"
+                label="Email"
+                onBlur={field.onBlur}
+                editable={!isLoading}
+                error={fieldState.error?.message}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            )}
+            name="email"
+          />
+        );
+      case "otp":
+        return (
+          <Controller
+            control={control}
+            rules={{
+              required: "OTP is required",
+              pattern: {
+                value: /^[0-9]{6}$/, // Assuming 6-digit OTP
+                message: "Please enter a valid 6-digit code"
+              }
+            }}
+            render={({ field, fieldState }) => (
+              <TextInput
+                value={field.value}
+                onChangeText={field.onChange}
+                placeholder="Enter 6-digit code"
+                label="Verification Code"
+                onBlur={field.onBlur}
+                editable={!isLoading}
+                error={fieldState.error?.message}
+                keyboardType="number-pad"
+                maxLength={6}
+                autoComplete="one-time-code"
+              />
+            )}
+            name="otp"
+          />
+        );
+      case "updatePassword":
+        return (
+          <>
+            <Controller
+              control={control}
+              rules={{ required: "Password is required" }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="New password"
+                  label="New Password"
+                  onBlur={field.onBlur}
+                  editable={!isLoading}
+                  secureTextEntry
+                  error={fieldState.error?.message}
+                />
+              )}
+              name="password"
+            />
+            <Controller
+              control={control}
+              rules={{
+                required: "Please confirm your password",
+                validate: (value) =>
+                  value === watch("password") || "Passwords don't match",
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="Confirm new password"
+                  label="Confirm Password"
+                  onBlur={field.onBlur}
+                  editable={!isLoading}
+                  secureTextEntry
+                  error={fieldState.error?.message}
+                />
+              )}
+              name="confirmPassword"
+            />
+          </>
+        );
+      case "signin":
+        return (
+          <>
+            <Controller
+              control={control}
+              rules={{
+                required: "Email is required",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address",
+                },
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="email"
+                  label="Email"
+                  onBlur={field.onBlur}
+                  editable={!isLoading}
+                  error={fieldState.error?.message}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              )}
+              name="email"
+            />
+            <Controller
+              control={control}
+              rules={{
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+                validate: (value) => {
+                  const hasLowerCase = /[a-z]/.test(value);
+                  const hasUpperCase = /[A-Z]/.test(value);
+                  const hasNumber = /[0-9]/.test(value);
+                  const hasSpecialChar =
+                    /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?/~]/.test(value);
 
-  // Check if form is complete based on required fields
-  const isFormComplete = useMemo(() => {
-    if (type === "signin") {
-      return Boolean(formValues.email && formValues.password);
-    } else {
-      return Boolean(
-        formValues.username &&
-          formValues.email &&
-          formValues.password &&
-          formValues.confirmPassword
-      );
+                  if (
+                    !hasLowerCase ||
+                    !hasUpperCase ||
+                    !hasNumber ||
+                    !hasSpecialChar
+                  ) {
+                    return "Password must contain at least one lowercase letter, uppercase letter, number, and special character";
+                  }
+
+                  return true;
+                },
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="password"
+                  label="Password"
+                  onBlur={field.onBlur}
+                  secureTextEntry={true}
+                  error={fieldState.error?.message}
+                  editable={!isLoading}
+                  textContentType="newPassword"
+                  autoComplete="off"
+                />
+              )}
+              name="password"
+            />
+          </>
+        );
+      case "signup":
+        return (
+          <>
+            <Controller
+              control={control}
+              rules={{
+                required: "Username is required",
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="username"
+                  label="Username"
+                  onBlur={field.onBlur}
+                  editable={!isLoading}
+                  error={fieldState.error?.message}
+                  autoCapitalize="none"
+                />
+              )}
+              name="username"
+            />
+            <Controller
+              control={control}
+              rules={{
+                required: "Email is required",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address",
+                },
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="email"
+                  label="Email"
+                  onBlur={field.onBlur}
+                  editable={!isLoading}
+                  error={fieldState.error?.message}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              )}
+              name="email"
+            />
+            <Controller
+              control={control}
+              rules={{
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+                validate: (value) => {
+                  const hasLowerCase = /[a-z]/.test(value);
+                  const hasUpperCase = /[A-Z]/.test(value);
+                  const hasNumber = /[0-9]/.test(value);
+                  const hasSpecialChar =
+                    /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?/~]/.test(value);
+
+                  if (
+                    !hasLowerCase ||
+                    !hasUpperCase ||
+                    !hasNumber ||
+                    !hasSpecialChar
+                  ) {
+                    return "Password must contain at least one lowercase letter, uppercase letter, number, and special character";
+                  }
+
+                  return true;
+                },
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="password"
+                  label="Password"
+                  onBlur={field.onBlur}
+                  secureTextEntry={true}
+                  error={fieldState.error?.message}
+                  editable={!isLoading}
+                  textContentType="newPassword"
+                  autoComplete="off"
+                />
+              )}
+              name="password"
+            />
+            <Controller
+              control={control}
+              rules={{
+                required: "Please confirm your password",
+                validate: (value) =>
+                  value === watch("password") || "Passwords don't match",
+              }}
+              render={({ field, fieldState }) => (
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="confirm password"
+                  label="Confirm Password"
+                  onBlur={field.onBlur}
+                  editable={!isLoading}
+                  secureTextEntry={true}
+                  error={fieldState.error?.message}
+                />
+              )}
+              name="confirmPassword"
+            />
+          </>
+        );
     }
-  }, [formValues, type]);
-
-  const onFormSubmit = async (data: AuthCredentialsType) => {
-    if (!isFormComplete || isLoading) return;
-    await onSubmit(data);
   };
 
   return (
@@ -61,143 +328,30 @@ const AuthForm: React.FC<AuthFormProps> = ({
       darkColor="transparent"
       className="font-comic"
     >
-      {/* First field for the username  */}
-      {type === "signup" && (
-        <Controller
-          control={control}
-          rules={{
-            required: "Username is required",
-          }}
-          render={({
-            field: { onChange, onBlur, value },
-            fieldState: { error },
-          }) => (
-            <TextInput
-              value={value}
-              onChangeText={onChange}
-              placeholder="username"
-              autoCapitalize="none"
-              label="Username"
-              onBlur={onBlur}
-              editable={!isLoading}
-              error={error?.message}
-            />
-          )}
-          name="username"
-        />
-      )}
-      <Controller
-        control={control}
-        rules={{
-          required: "Email is required",
-          pattern: {
-            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-            message: "Invalid email address",
-          },
-        }}
-        render={({
-          field: { onChange, onBlur, value },
-          fieldState: { error },
-        }) => (
-          <TextInput
-            value={value}
-            onChangeText={onChange}
-            placeholder="email"
-            label="Email"
-            onBlur={onBlur}
-            editable={!isLoading}
-            error={error?.message}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-        )}
-        name="email"
-      />
-      <Controller
-        control={control}
-        rules={{
-          required: "Password is required",
-          minLength: {
-            value: 6,
-            message: "Password must be at least 6 characters",
-          },
-          validate: (value) => {
-            const hasLowerCase = /[a-z]/.test(value);
-            const hasUpperCase = /[A-Z]/.test(value);
-            const hasNumber = /[0-9]/.test(value);
-            const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?/~]/.test(value);
-
-            if (!hasLowerCase || !hasUpperCase || !hasNumber || !hasSpecialChar) {
-              return "Password must contain at least one lowercase letter, uppercase letter, number, and special character";
-            }
-
-            return true;
-          }
-        }}
-        render={({
-          field: { onChange, onBlur, value },
-          fieldState: { error },
-        }) => (
-          <TextInput
-            value={value}
-            onChangeText={onChange}
-            placeholder="password"
-            label="Password"
-            onBlur={onBlur}
-            secureTextEntry={true}
-            error={error?.message}
-            editable={!isLoading}
-            textContentType="newPassword"
-            autoComplete="off"
-          />
-        )}
-        name="password"
-      />
-      {type === "signup" && (
-        <Controller
-          control={control}
-          rules={{
-            required: "Please confirm your password",
-            validate: (value) =>
-              value === watch("password") || "Passwords don't match",
-          }}
-          render={({
-            field: { onChange, onBlur, value },
-            fieldState: { error },
-          }) => (
-            <TextInput
-              value={value}
-              onChangeText={onChange}
-              placeholder="confirm password"
-              label="Confirm Password"
-              onBlur={onBlur}
-              editable={!isLoading}
-              secureTextEntry={true}
-              error={error?.message}
-            />
-          )}
-          name="confirmPassword"
-        />
-      )}
-
-      {/* Show API error if present */}
+      {renderFields()}
       {error && (
         <ThemedText className="text-red-600 mb-4 text-center">
           {error}
         </ThemedText>
       )}
-
       <Button
         textStyle={{
           fontSize: 18,
           fontFamily: "Comic",
           fontWeight: "600",
         }}
-        onPress={handleSubmit(onFormSubmit)}
+        onPress={handleSubmit(onSubmit)}
         loading={isLoading}
-        disabled={!isFormComplete || isLoading}
       >
-        {type === "signin" ? "Sign In" : "Sign Up"}
+        {type === "reset"
+          ? "Send Code"
+          : type === "otp"
+          ? "Verify Code"
+          : type === "updatePassword"
+          ? "Update Password"
+          : type === "signin"
+          ? "Sign In"
+          : "Sign Up"}
       </Button>
     </ThemedView>
   );

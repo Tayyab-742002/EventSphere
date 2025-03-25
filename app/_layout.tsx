@@ -4,17 +4,32 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Slot, Stack } from "expo-router";
+import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { AuthProvider } from "@/Provider/authContext";
+import { AuthProvider, useAuth } from "@/Provider/authContext";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+console.log("Root Layout rendered 1");
+
+// Keep the splash screen visible while we fetch the auth state
 SplashScreen.preventAutoHideAsync();
+
+function RootLayoutNav() {
+  const { isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      // Hide splash screen once we have the auth state
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
+  return <Slot />;
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -22,13 +37,7 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/Comic.ttf"),
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  // Don't render anything until the fonts are loaded and auth is initialized
+  // Don't hide splash screen until fonts are loaded
   if (!loaded) {
     return null;
   }
@@ -36,7 +45,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Slot />
+        <RootLayoutNav />
         <StatusBar style="auto" />
       </ThemeProvider>
     </AuthProvider>

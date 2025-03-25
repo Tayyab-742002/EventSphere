@@ -1,14 +1,20 @@
-import { Image, StyleSheet, Platform, View } from "react-native";
+import { StyleSheet, Platform, View, TextInput } from "react-native";
 
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/ui/Button";
+import { useAuth } from "@/Provider/authContext";
+import { OTPInput } from "@/components/ui/OtpInput";
 
 export default function HomeScreen() {
+  const { signOut, isLoading, error } = useAuth();
   const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
   return (
     <SafeAreaView className="flex-1 ">
@@ -16,27 +22,11 @@ export default function HomeScreen() {
         <ThemedText className="bg-transparent">
           Home Screen Goes Here
         </ThemedText>
-        <Button onPress={handleSignOut}>Sign Out</Button>
+        <Button onPress={handleSignOut} loading={isLoading}>
+          Sign Out
+        </Button>
+        {/* <OTPInput /> */}
       </ThemedView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
-});
